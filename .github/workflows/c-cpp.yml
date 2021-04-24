@@ -17,7 +17,7 @@ jobs:
         run: cmake -B build
    
       # Build engine Release
-      - name: build-sln-Release
+      - name: compile
         shell: bash
         run: |
           cd build
@@ -36,28 +36,33 @@ jobs:
       - name: run-cmake
         run: cmake -B build
    
-      # Build engine Release
-      - name: build-sln-Release
+      # Build Release
+      - name: compile
         shell: cmd
         run: |
           @echo | msbuild -m build/CppUtils.sln /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
-          dir bin/Bin
+          
+      # Build Debug
+      - name: compile
+        shell: cmd
+        run: |
+          @echo | msbuild -m build/CppUtils.sln /t:build /p:Configuration="Debug" /p:Platform="x64" /p:BuildInParallel=true
           
       # Prepare package Release
       - name: prepare-package-Release
         shell: cmd
         run: |
           mkdir Release\
-          mkdir Release\ILSD
-          copy "Binaries\ILSD\Release\*" "Release\ILSD\"
+          mkdir Release\CppUtils
+          copy "bin\Bin\Release\*" "Release\ILSD\"
           
       # Prepare package Debug
       - name: prepare-package-Debug
         shell: cmd
         run: |
           mkdir Debug\
-          mkdir Debug\ILSD
-          copy "Binaries\ILSD\Debug\*" "Debug\ILSD\"
+          mkdir Debug\CppUtils
+          copy "bin\Bin\Release\*" "Release\CppUtils\"
           
       # Generate artifact Debug
       - uses: actions/upload-artifact@v2
@@ -83,47 +88,27 @@ jobs:
     # Download artifact
     - uses: actions/download-artifact@v2
       with:
-        name: ILSD Debug
+        name: CPpUtils Debug
         path: Debug/
       
     - uses: actions/download-artifact@v2
       with:
-        name: ILSD Release
+        name: CPpUtils Release
         path: Release/
       
     # Zip
-    - run: |
-        mkdir Release\ILSD\ressources
-        mkdir Release\ILSD\ressources\captures
-        mkdir Release\ILSD\ressources\tiles
-        mkdir Release\ILSD\ressources\strokes
-        mkdir Release\ILSD\ressources\nvm
-        mkdir Release\ILSD\ressources\til
-        mkdir Release\ILSD\ressources\til\sub
-        mkdir Release\ILSD\ressources\til\mid
-        mkdir Release\ILSD\ressources\til\sol
-        
-        mkdir Debug\ILSD\ressources
-        mkdir Debug\ILSD\ressources\captures
-        mkdir Debug\ILSD\ressources\tiles
-        mkdir Debug\ILSD\ressources\strokes
-        mkdir Debug\ILSD\ressources\nvm
-        mkdir Debug\ILSD\ressources\til
-        mkdir Debug\ILSD\ressources\til\sub
-        mkdir Debug\ILSD\ressources\til\mid
-        mkdir Debug\ILSD\ressources\til\sol
-     
-        powershell Compress-Archive -Path Release\* -DestinationPath ILSD-Release.zip
-        powershell Compress-Archive -Path Debug\* -DestinationPath ILSD-Debug.zip
+    - run: |     
+        powershell Compress-Archive -Path Release\* -DestinationPath CPpUtils-Release.zip
+        powershell Compress-Archive -Path Debug\* -DestinationPath CPpUtils-Debug.zip
       shell: cmd
     
     # Release
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "ILSD"
+        automatic_release_tag: "CPpUtils"
         prerelease: true
-        title: "ILSD"
+        title: "CPpUtils"
         files: | 
-            ILSD-Debug.zip
-            ILSD-Release.zip
+            CPpUtils-Debug.zip
+            CPpUtils-Release.zip
