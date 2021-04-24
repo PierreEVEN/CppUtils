@@ -21,6 +21,9 @@ int main(int argc, char* agv[])
 	LOG_VALIDATE("validate");
 	LOG_VALIDATE("coucou : %s", res.c_str());
 
+	LOG_INFO("%s : %s", stringutils::array_to_string<int>({ 1, 2, 3, 4 }).c_str(), stringutils::array_to_string<std::string>({ "1", "deux", "3" }).c_str());
+
+	
 	LOG_ERROR("error");
 	LOG_ERROR("coucou : %s", res.c_str());
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -14,41 +15,43 @@ namespace stringutils
 	 * \return string
 	 */
 	template<typename... Params>
-	[[nodiscard]] std::string format(const char* format, const Params... args) {
-		const int size = snprintf(nullptr, 0, format, args...) + 1;
+	[[nodiscard]] std::string format(const std::string& format, const Params... args) {
+		const int size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
 		if (size <= 0) return format;
 		const std::unique_ptr<char[]> buffer(new char[size]);
-		snprintf(buffer.get(), size, format, args ...);
+		snprintf(buffer.get(), size, format.c_str(), args ...);
 		return std::string(buffer.get());
 	}
 
-	typedef bool(*trim_filter_func)(char);
+	typedef bool(*TrimFilterFunction)(char);
+	[[nodiscard]] bool default_trim_func(char chr);	
+	[[nodiscard]] std::string trim(const std::string& source, const TrimFilterFunction filter = default_trim_func);
 
-	[[nodiscard]] inline bool default_trim_func(char chr)
-	{
-		return chr == ' ' || chr == '\t' || chr == '\n' || chr == '\r';
-	}
-	
-	[[nodiscard]] inline std::string trim(const std::string& source, const trim_filter_func filter = default_trim_func)
-	{
-		if (source.empty()) return "";
-		assert(filter);
-		size_t start = 0, end = source.size();
+	[[nodiscard]] std::vector<std::string> split(const std::string& source, const std::vector<char>& delimiters);
 
-		while (filter(source[start]))
-		{
-			if (start == end - 1) return "";
-			start++;
+	template<typename T>
+	std::string array_to_string(const std::vector<T>& in_array, const std::string& separator = ", ")
+	{
+		if (in_array.empty()) return "";
+		std::string result;
+		if constexpr (std::is_base_of<std::string, T>::value) {
+			result = in_array[0];
 		}
-
-		while (filter(source[--end])) {}
-		return std::string(source.begin() + start, source.begin() + end + 1);
+		else
+		{
+			result += std::to_string(in_array[0]);
+		}
+		for (size_t i = 1; i < in_array.size(); ++i)
+		{
+			if constexpr ( std::is_base_of<std::string, T>::value) {
+				result += separator + in_array[i];
+			}
+			else
+			{
+				result += separator + std::to_string(in_array[i]);				
+			}
+		}
+		return result;
 	}
-
-	[[nodiscard]] inline std::vector<std::string> split(const std::string& source, const std::vector<char>& delimiters)
-	{
-		return {};
-	}
-	
 	
 }
