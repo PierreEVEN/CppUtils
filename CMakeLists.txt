@@ -22,25 +22,25 @@ set(BINARIES_DIR ${PROJECT_ROOT}/bin) # Binaries dir
 set(INTERMEDIATES_DIR ${PROJECT_ROOT}/temp) # Intermediates dir
 
 
-function(construct_target TARGET_NAME TARGET_PATH SOURCES)
+function(construct_target TARGET_NAME TARGET_PATH)
 	set_target_properties(${TARGET_NAME} PROPERTIES 
 		ARCHIVE_OUTPUT_DIRECTORY "${BINARIES_DIR}/Lib"
 		RUNTIME_OUTPUT_DIRECTORY "${BINARIES_DIR}/Bin"
 		LIBRARY_OUTPUT_DIRECTORY "${BINARIES_DIR}/Bin"
 		VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_ROOT}")
-	target_include_directories(${TARGET_NAME} PUBLIC ${TARGET_PATH}/public)
+	target_include_directories(${TARGET_NAME} PUBLIC ${PROJECT_ROOT}/include)
 	target_compile_features(${TARGET_NAME} PUBLIC cxx_std_17)
 	set_target_properties(${TARGET_NAME} PROPERTIES CXX_EXTENSIONS OFF)
 	IF (WIN32)
-		source_group(TREE ${TARGET_PATH} FILES ${SOURCES})
 	ELSE ()
 		target_link_libraries(${TARGET_NAME} -ldl -lpthread)
 	ENDIF()
 endfunction()
 
-file(GLOB_RECURSE SOURCES src/*.cpp src/*.h cpputils)
+file(GLOB_RECURSE SOURCES src/* include/*)
+source_group(TREE . FILES ${SOURCES})
 add_library(cpputils ${SOURCES})
-construct_target(cpputils ./src/ ${SOURCES})
+construct_target(cpputils . )
 
 file(GLOB_RECURSE SOURCES tests/*.cpp tests/*.h)
 add_executable(tests ${SOURCES})

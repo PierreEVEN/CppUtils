@@ -1,4 +1,7 @@
-#include "utils/logger.h"
+
+#include "cpputils/logger.hpp"
+
+#if OS_LINUX
 
 #include <iostream>
 #include <mutex>
@@ -6,13 +9,7 @@
 #include <vector>
 #include <thread>
 
-#include "utils/stringutils.h"
-
-#if _WIN32
-#include <windows.h>
-HANDLE h_console_out = GetStdHandle(STD_OUTPUT_HANDLE);
-
-std::vector<uint8_t> allowed_thread_colors = {
+static std::vector<uint8_t> allowed_thread_colors = {
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 	18, 19, 20, 22, 23, 24, 26, 27, 28, 30, 31,
 	32, 33, 37, 38, 39, 43, 44, 45, 46, 47,
@@ -30,73 +27,73 @@ std::vector<uint8_t> allowed_thread_colors = {
 	224, 225, 226, 227, 228, 229, 232, 233, 234, 235, 236, 237,
 	240, 241, 242, 243 ,244 ,245, 248, 249, 250, 252, 253
 };
-#endif
 
+static const char* get_log_level_color(const logger::LogType log_level)
+{
+	switch (log_level)
+	{
+	case logger::LogType::LOG_LEVEL_VALIDATE:
+		return "\033[92m";
+	case logger::LogType::LOG_LEVEL_ERROR:
+		return "\033[91m";
+	case logger::LogType::LOG_LEVEL_WARNING:
+		return "\033[93m";
+	case logger::LogType::LOG_LEVEL_DEBUG:
+		return "\033[96m";
+	case logger::LogType::LOG_LEVEL_INFO:
+		return "\033[94m";
+	case logger::LogType::LOG_LEVEL_FATAL:
+		return "\033[105m";
+	default:
+		return "\033[0m";
+	}
+}
 
 namespace logger
 {
 	static std::mutex logger_lock;
 	static uint8_t(*thread_identifier_func)() = nullptr;
-	
 
 
-	void log_print(const char* type, int color, const std::string& message, const char* function, size_t line,
-		const char* file)
+
+	void console_print(LogType log_type, const std::string& message, const char* function, size_t line, const char* file)
 	{
 		std::lock_guard<std::mutex> lock(logger_lock);
 
 
 		struct tm time_str;
 		static char time_buffer[80];
-		time_t now = time(0);
-#if _WIN32
+		auto now = time(0);
 		localtime_s(&time_str, &now);
-#else
-        localtime_r(&now, &time_str);
-#endif
-		//strftime(time_buffer, sizeof(time_buffer), "%d/%b/%Y %X", &time_str);
 		strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
 
-#if _WIN32
-		SetConsoleTextAttribute(h_console_out, color);
-#endif
-		std::cout << "\033[1;7;31m";
-
+		std::cout << get_log_level_color(log_type);
 		std::cout << stringutils::format("[%s  ", time_buffer);
 
-		std::cout << "\033[0m";
-
-		uint8_t worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-		std::string worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
+		auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+		auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
 		if (thread_identifier_func && thread_identifier_func() != 255)
 		{
 			worker_id_str = stringutils::format("#W%d", thread_identifier_func());
 			worker_id = thread_identifier_func();
 
-#if _WIN32
-			if (thread_identifier_func && worker_id != 255) SetConsoleTextAttribute(h_console_out, allowed_thread_colors[worker_id % allowed_thread_colors.size()]);
-#endif
+			if (thread_identifier_func && worker_id != 255) std::cout << "\033[38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
 		}
 		else
 		{
-#if _WIN32
-			SetConsoleTextAttribute(h_console_out, CONSOLE_ASSERT);
-#endif
+			std::cout << "033[101m";
 		}
-				
+
 		std::cout << stringutils::format("%s", worker_id_str.c_str());
-#if _WIN32
-		SetConsoleTextAttribute(h_console_out, color);
-#endif
-		if (function) std::cout << stringutils::format("] [%s] % s::% d : %s", type, function, line, message.c_str());
-		else std::cout << stringutils::format("] [%s] : %s", type, message.c_str());
+		std::cout << get_log_level_color(log_type);
+		
+		if (function) std::cout << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(log_type), function, line, message.c_str());
+		else std::cout << stringutils::format("] [%c] : %s", get_log_level_char(log_type), message.c_str());
 
 		if (file) std::cout << stringutils::format("\n\t=>%s", file);
-		
+
 		std::cout << std::endl;
-#if _WIN32
-		SetConsoleTextAttribute(h_console_out, CONSOLE_DEFAULT);
-#endif
+		std::cout << "\033[0m";
 	}
 
 	void set_thread_identifier_func(uint8_t(*getter)())
@@ -104,3 +101,5 @@ namespace logger
 		thread_identifier_func = getter;
 	}
 }
+
+#endif // OS_LINUX
