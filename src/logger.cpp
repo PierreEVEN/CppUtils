@@ -70,7 +70,11 @@ struct LogFileManager
 		time_t     now = time(0);
 		struct tm  tstruct;
 		char       buf[80];
+#if OS_WINDOWS
 		localtime_s(&tstruct, &now);
+#else
+		localtime_r(&now, &tstruct);
+#endif
 		strftime(buf, sizeof(buf), "%Y-%m-%d.%H.%M.%S", &tstruct);
 		
 		file = std::ofstream(stringutils::format(log_file.c_str(), buf));
