@@ -40,7 +40,7 @@ jobs:
       - name: compile-release
         shell: cmd
         run: |
-          @echo | msbuild -m build/CppUtils.sln /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
+          @echo | msbuild -m build/cpputils.vcxproj /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
           
       # Build Debug
       - name: compile-debug
@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir Release\
           mkdir Release\CppUtils
-          copy "bin\Lib\Release\*" "Release\ILSD\"
+          copy "bin\Lib\Release\*" "Release\CppUtils\"
           
       # Prepare package Debug
       - name: prepare-package-Debug
@@ -62,7 +62,8 @@ jobs:
         run: |
           mkdir Debug\
           mkdir Debug\CppUtils
-          copy "bin\Lib\Release\*" "Release\CppUtils\"
+          copy "bin\Lib\Debug\*" "Debug\CppUtils\"
+          copy "include\*" "Debug\CppUtils\"
           
       # Generate artifact Debug
       - uses: actions/upload-artifact@v2
