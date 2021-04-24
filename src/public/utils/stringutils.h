@@ -47,7 +47,7 @@ namespace stringutils
 
 	[[nodiscard]] inline std::vector<std::string> split(const std::string& source, const std::vector<char>& delimiters)
 	{
-		
+		return {};
 	}
 	
 	

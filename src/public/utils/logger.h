@@ -3,7 +3,7 @@
 #include <string>
 
 #include "stringutils.h"
-
+#if _WIN32
 #if _DEBUG
 #define logger_log(format_str, ...) logger::log_print("I", logger::ConsoleColor::CONSOLE_DISPLAY, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__)
 #define logger_validate(format_str, ...) logger::log_print("V", logger::ConsoleColor::CONSOLE_VALIDATE, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__)
@@ -16,6 +16,14 @@
 #define logger_warning(format_str, ...) logger::log_print("W", logger::ConsoleColor::CONSOLE_WARNING, stringutils::format(format_str, __VA_ARGS__))
 #define logger_error(format_str, ...) logger::log_print("E", logger::ConsoleColor::CONSOLE_FAIL, stringutils::format(format_str, __VA_ARGS__))
 #define logger_fail(format_str, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); }
+#endif
+#else
+#define logger_log(format_str, ...) logger::log_print("I", logger::ConsoleColor::CONSOLE_DISPLAY, stringutils::format(format_str, ##__VA_ARGS__))
+#define logger_validate(format_str, ...) logger::log_print("V", logger::ConsoleColor::CONSOLE_VALIDATE, stringutils::format(format_str, ##__VA_ARGS__))
+#define logger_warning(format_str, ...) logger::log_print("W", logger::ConsoleColor::CONSOLE_WARNING, stringutils::format(format_str, ##__VA_ARGS__))
+#define logger_error(format_str, ...) logger::log_print("E", logger::ConsoleColor::CONSOLE_FAIL, stringutils::format(format_str, ##__VA_ARGS__))
+#define logger_fail(format_str, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__); exit(EXIT_FAILURE); }
+
 #endif
 
 
@@ -47,6 +55,18 @@ namespace logger
 		CONSOLE_FAIL = CONSOLE_FG_COLOR_LIGHT_RED,
 		CONSOLE_ASSERT = CONSOLE_FG_COLOR_VIOLET | CONSOLE_BG_COLOR_RED | CONSOLE_BG_COLOR_GREEN | CONSOLE_BG_COLOR_LIGHT
 	};
+
+
+	enum LogType {
+	    LOG_VALIDATE = 1 << 0,
+	    LOG_DEBUG = 1 << 1,
+	    LOG_INFO = 1 << 2,
+	    LOG_WARNING = 1 << 3,
+	    LOG_ERROR = 1 << 4,
+	    LOG_FATAl = 1 << 5
+	};
+
+
 	
 	void log_print(const char* type, int color, const std::string& message, const char* function = nullptr, size_t line = 0, const char* file = nullptr);
 
