@@ -48,16 +48,8 @@ static const char* get_log_level_color(const logger::LogType log_level)
 
 namespace logger
 {
-	static std::mutex logger_lock;
-	static uint8_t(*thread_identifier_func)() = nullptr;
-
-
-
 	void console_print(LogType log_type, const std::string& message, const char* function, size_t line, const char* file)
 	{
-		std::lock_guard<std::mutex> lock(logger_lock);
-
-
 		struct tm time_str;
 		static char time_buffer[80];
 		auto now = time(0);
@@ -69,12 +61,12 @@ namespace logger
 
 		auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 		auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
-		if (thread_identifier_func && thread_identifier_func() != 255)
+		if (get_thread_identifier() && get_thread_identifier()() != 255)
 		{
-			worker_id_str = stringutils::format("#W%d", thread_identifier_func());
-			worker_id = thread_identifier_func();
+			worker_id_str = stringutils::format("#W%d", get_thread_identifier()());
+			worker_id = get_thread_identifier()();
 
-			if (thread_identifier_func && worker_id != 255) std::cout << "\033[40;4;38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
+			if (get_thread_identifier() && worker_id != 255) std::cout << "\033[40;4;38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
 		}
 		else
 		{
@@ -92,11 +84,6 @@ namespace logger
 
 		std::cout << std::endl;
 		std::cout << "\033[0m";
-	}
-
-	void set_thread_identifier_func(uint8_t(*getter)())
-	{
-		thread_identifier_func = getter;
 	}
 }
 

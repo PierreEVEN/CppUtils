@@ -5,9 +5,10 @@
 
 int main(int argc, char* agv[])
 {
-	std::string res = "|" + stringutils::trim("a  azdz  a  a") + "|";
-
-
+	logger::set_log_file("./saved/log/Log - %s.log");
+	
+	std::string res = "|" + stringutils::trim(" \t\r\n		  un beau string au bon format \r\t\n	 ") + "|";
+	
     std::thread([] () {
         LOG_INFO("THREAD_TEST");
     }).join();
@@ -15,7 +16,7 @@ int main(int argc, char* agv[])
         LOG_INFO("THREAD_TEST 2");
     }).join();
 
-    logger::set_thread_identifier_func([] () -> uint8_t { return rand() % 255; });
+    logger::set_thread_identifier([] () -> uint8_t { return rand() % 255; });
 
 	LOG_VALIDATE("validate");
 	LOG_VALIDATE("coucou : %s", res.c_str());
@@ -30,10 +31,8 @@ int main(int argc, char* agv[])
 	LOG_INFO("coucou : %s", res.c_str());
 
 	LOG_DEBUG("debug");
-	LOG_DEBUG("debug : %s", res.c_str());
+	LOG_DEBUG("coucou : %s", res.c_str());
 
 	LOG_FATAL("fatal");
-	LOG_FATAL("fatal : %s", res.c_str());
-
-
+	LOG_FATAL("coucou : %s", res.c_str());	
 }

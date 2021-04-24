@@ -1,0 +1,2 @@
+log level env var
+log dequeue (instead of blocking mutex)

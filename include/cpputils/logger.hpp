@@ -3,18 +3,22 @@
 #include "cpputils/stringutils.hpp"
 #include "cpputils/simplemacros.hpp"
 
+#include <filesystem>
+
 #if CXX_MSVC || CXX_CLANG
-#define __SIMPLE_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__)
-#define __ADVANCED_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__)
 #if CXX_LEVEL_DEBUG
-#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); }
+#define __SIMPLE_LOG(format_str, log_level, ...) logger::log(logger::LogItem(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__))
+#define __ADVANCED_LOG(format_str, log_level, ...) logger::log(logger::LogItem(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__))
+#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::log(logger::LogItem(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__)); __debugbreak(); exit(EXIT_FAILURE); }
 #else
-#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); __debugbreak(); exit(EXIT_FAILURE); }
+#define __SIMPLE_LOG(format_str, log_level, ...) logger::log(logger::LogItem(log_level, stringutils::format(format_str, __VA_ARGS__))
+#define __ADVANCED_LOG(format_str, log_level, ...) logger::log(logger::LogItem(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__)
+#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::log(logger::LogItem(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); }
 #endif
 #elif CXX_GCC
-#define __SIMPLE_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__)
-#define __ADVANCED_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__)
-#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::console_print(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__); exit(EXIT_FAILURE); }
+#define __SIMPLE_LOG(format_str, log_level, ...) logger::log(logger::LogItem(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__))
+#define __ADVANCED_LOG(format_str, log_level, ...) logger::log(logger::LogItem(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__))
+#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::log(logger::LogItem(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__)); exit(EXIT_FAILURE); }
 #endif
 
 #if CXX_MSVC
@@ -44,37 +48,43 @@ namespace logger
 		LOG_LEVEL_DEBUG = 1 << 5,
 	};
 
+	
+	struct LogItem
+	{
+		LogItem(LogType in_log_level, const std::string& in_message, const char* in_function = nullptr, size_t in_line = 0, const char* in_file = nullptr)
+			: log_level(in_log_level), message(in_message), function(in_function), line(in_line), file(in_file) {}
+
+		LogType log_level;
+		std::string message;
+		const char* function;
+		size_t line;
+		const char* file;
+	};
+	
+	typedef void(*LogFunctionType)(const LogItem& in_log);
+	typedef uint8_t(*ThreadIdentifierFunctionType)();
+
+
+	[[nodiscard]] LogFunctionType get_log_function();
+	void set_log_function(LogFunctionType in_function);
+	void set_log_file(const std::string& file);
+	
 	/**
 	 * print a log to terminal stdout (with colors)
 	 */
-	void console_print(LogType log_type, const std::string& message, const char* function = nullptr, size_t line = 0, const char* file = nullptr);
+	void log(const LogItem& in_log);
 
+	void console_print(const LogItem& in_log);
+	void file_print(const LogItem& in_log);
+	
 	/**
 	 * Threads can be identified with a custom ID.
 	 * return 255 if thread is unknown.
 	 *
 	 * ie : logger_set_thread_identifier_func([] () -> uint8_t { return is_worker_thread() ? return get_worker_thread_id() : 255 });
 	 */
-	void set_thread_identifier_func(uint8_t(*getter)());
+	void set_thread_identifier(ThreadIdentifierFunctionType func);
+	[[nodiscard]] ThreadIdentifierFunctionType get_thread_identifier();
 
-
-	[[nodiscard]] inline char get_log_level_char(const logger::LogType log_level)
-	{
-		switch (log_level)
-		{
-		case logger::LogType::LOG_LEVEL_VALIDATE:
-			return 'V';
-		case logger::LogType::LOG_LEVEL_ERROR:
-			return 'E';
-		case logger::LogType::LOG_LEVEL_WARNING:
-			return 'W';
-		case logger::LogType::LOG_LEVEL_INFO:
-			return 'I';
-		case logger::LogType::LOG_LEVEL_DEBUG:
-			return 'D';
-		case logger::LogType::LOG_LEVEL_FATAL:
-			return 'F';
-		}
-		return 'X';
-	}
+	[[nodiscard]] char get_log_level_char(const logger::LogType log_level);	
 }

@@ -1,13 +1,15 @@
 
+#include <fstream>
+
 #include "cpputils/logger.hpp"
 
 #if OS_WINDOWS
 
 #include <iostream>
 #include <mutex>
-#include <sstream>
 #include <vector>
 #include <thread>
+#include <filesystem>
 
 #include <Windows.h>
 
@@ -79,33 +81,25 @@ static WORD get_log_level_color(const logger::LogType log_level)
 
 namespace logger
 {
-    static std::mutex logger_lock;
-    static uint8_t(*thread_identifier_func)() = nullptr;
-
-
-
-	void console_print(LogType log_type, const std::string& message, const char* function, size_t line, const char* file)
+	void console_print(const LogItem& in_log)
     {
-        std::lock_guard<std::mutex> lock(logger_lock);
-
-
         struct tm time_str;
         static char time_buffer[80];
         auto now = time(0);
         localtime_s(&time_str, &now);
         strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
 
-        SetConsoleTextAttribute(h_console_out, get_log_level_color(log_type));
+        SetConsoleTextAttribute(h_console_out, get_log_level_color(in_log.log_level));
         std::cout << stringutils::format("[%s  ", time_buffer);
 
         auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
         auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
-        if (thread_identifier_func && thread_identifier_func() != 255)
+        if (get_thread_identifier() && get_thread_identifier()() != 255)
         {
-            worker_id_str = stringutils::format("#W%d", thread_identifier_func());
-            worker_id = thread_identifier_func();
+            worker_id_str = stringutils::format("#W%d", get_thread_identifier()());
+            worker_id = get_thread_identifier()();
 
-            if (thread_identifier_func && worker_id != 255) SetConsoleTextAttribute(h_console_out, allowed_thread_colors[worker_id % allowed_thread_colors.size()]);
+            if (get_thread_identifier() && worker_id != 255) SetConsoleTextAttribute(h_console_out, allowed_thread_colors[worker_id % allowed_thread_colors.size()]);
         }
         else
         {
@@ -113,19 +107,14 @@ namespace logger
         }
 
         std::cout << stringutils::format("%s", worker_id_str.c_str());
-        SetConsoleTextAttribute(h_console_out, get_log_level_color(log_type));
-        if (function) std::cout << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(log_type), function, line, message.c_str());
-        else std::cout << stringutils::format("] [%c] : %s", get_log_level_char(log_type), message.c_str());
+        SetConsoleTextAttribute(h_console_out, get_log_level_color(in_log.log_level));
+        if (in_log.function) std::cout << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(in_log.log_level), in_log.function, in_log.line, in_log.message.c_str());
+        else std::cout << stringutils::format("] [%c] : %s", get_log_level_char(in_log.log_level), in_log.message.c_str());
 
-        if (file) std::cout << stringutils::format("\n\t=>%s", file);
+        if (in_log.file) std::cout << stringutils::format("\n\t=>%s", in_log.file);
 
         std::cout << std::endl;
         SetConsoleTextAttribute(h_console_out, CONSOLE_DEFAULT);
-    }
-
-    void set_thread_identifier_func(uint8_t(*getter)())
-    {
-        thread_identifier_func = getter;
     }
 }
 
