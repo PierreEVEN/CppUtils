@@ -18,7 +18,7 @@ jobs:
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
         
-      - name: generate-sln
+      - name: test
         shell: cmd
         run: pwd
         
