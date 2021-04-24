@@ -7,9 +7,21 @@ on:
     branches: [ main ]
 
 jobs:
- # build-ubuntu:
-  #  runs-on: ubuntu-latest
+  build-ubuntu:
+    runs-on: ubuntu-latest
     
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: run-cmake
+        run: cmake -B build
+   
+      # Build engine Release
+      - name: build-sln-Release
+        shell: bash
+        run: |
+          cd build
+          make
 
   build-windows:
     runs-on: windows-latest
@@ -28,7 +40,7 @@ jobs:
       - name: build-sln-Release
         shell: cmd
         run: |
-          @echo | msbuild -m build/cpputils.vcxproj /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
+          @echo | msbuild -m build/CppUtils.sln /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
           dir bin/Bin
           
       # Prepare package Release
