@@ -63,7 +63,6 @@ jobs:
           mkdir Debug\
           mkdir Debug\CppUtils
           copy "bin\Lib\Debug\*" "Debug\CppUtils\"
-          copy "include\*" "Debug\CppUtils\"
           
       # Generate artifact Debug
       - uses: actions/upload-artifact@v2
