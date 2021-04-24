@@ -37,16 +37,16 @@ jobs:
         run: cmake -B build
    
       # Build Release
-      - name: compile
+      - name: compile-release
         shell: cmd
         run: |
           @echo | msbuild -m build/CppUtils.sln /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
           
       # Build Debug
-      - name: compile
+      - name: compile-debug
         shell: cmd
         run: |
-          @echo | msbuild -m build/CppUtils.sln /t:build /p:Configuration="Debug" /p:Platform="x64" /p:BuildInParallel=true
+          @echo | msbuild -m build/cpputils.vcxproj /t:build /p:Configuration="Debug" /p:Platform="x64" /p:BuildInParallel=true
           
       # Prepare package Release
       - name: prepare-package-Release
@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir Release\
           mkdir Release\CppUtils
-          copy "bin\Bin\Release\*" "Release\ILSD\"
+          copy "bin\Lib\Release\*" "Release\ILSD\"
           
       # Prepare package Debug
       - name: prepare-package-Debug
@@ -62,7 +62,7 @@ jobs:
         run: |
           mkdir Debug\
           mkdir Debug\CppUtils
-          copy "bin\Bin\Release\*" "Release\CppUtils\"
+          copy "bin\Lib\Release\*" "Release\CppUtils\"
           
       # Generate artifact Debug
       - uses: actions/upload-artifact@v2
@@ -88,27 +88,27 @@ jobs:
     # Download artifact
     - uses: actions/download-artifact@v2
       with:
-        name: CPpUtils Debug
+        name: CppUtils Debug
         path: Debug/
       
     - uses: actions/download-artifact@v2
       with:
-        name: CPpUtils Release
+        name: CppUtils Release
         path: Release/
       
     # Zip
     - run: |     
-        powershell Compress-Archive -Path Release\* -DestinationPath CPpUtils-Release.zip
-        powershell Compress-Archive -Path Debug\* -DestinationPath CPpUtils-Debug.zip
+        powershell Compress-Archive -Path Release\* -DestinationPath CppUtils-Release.zip
+        powershell Compress-Archive -Path Debug\* -DestinationPath CppUtils-Debug.zip
       shell: cmd
     
     # Release
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "CPpUtils"
+        automatic_release_tag: "CppUtils"
         prerelease: true
-        title: "CPpUtils"
+        title: "CppUtils"
         files: | 
-            CPpUtils-Debug.zip
-            CPpUtils-Release.zip
+            CppUtils-Debug.zip
+            CppUtils-Release.zip
