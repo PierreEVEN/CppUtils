@@ -10,22 +10,19 @@
 #include <thread>
 
 static std::vector<uint8_t> allowed_thread_colors = {
-	2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-	18, 19, 20, 22, 23, 24, 26, 27, 28, 30, 31,
-	32, 33, 37, 38, 39, 43, 44, 45, 46, 47,
-	48, 49, 52, 54, 55, 58, 59, 60, 61, 62, 63,
-	64, 65, 66, 67, 70, 71, 73, 74, 75, 76, 78, 79,
-	80, 81, 82, 83, 84, 86, 87, 90, 91, 92, 94, 95,
-	96, 98, 99, 100, 101, 104, 105, 106, 109, 110, 111,
-	112, 113, 114, 115, 116, 117, 120, 121, 122, 123, 125, 127,
-	129, 132, 133, 134 ,135 ,138, 139, 140, 142, 143,
-	144, 145, 148, 149, 150, 151, 154, 155, 156, 157, 158, 159,
-	160, 161, 164, 165, 166, 167, 162, 174, 175,
-	176, 177, 178, 179, 180 ,181, 184, 185, 186, 189, 190, 191,
-	192, 193, 194, 197, 201, 202, 206, 207,
-	208, 209, 210, 211, 214, 215, 220, 222, 223,
-	224, 225, 226, 227, 228, 229, 232, 233, 234, 235, 236, 237,
-	240, 241, 242, 243 ,244 ,245, 248, 249, 250, 252, 253
+        1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10, 11, 12, 13, 14, 15, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+        45, 46, 47, 48, 49, 50, 51, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+        67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+        94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
+        109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 128, 129, 130,
+        131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153,154, 155,
+        156, 157, 158, 159, 163, 164, 165, 166, 167, 168, 169, 170, 171, 173, 174, 175, 176, 177, 178, 179, 180,
+        181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200,
+        201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 210,
+        221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
+        251, 252, 253, 254, 255
 };
 
 static const char* get_log_level_color(const logger::LogType log_level)
@@ -43,7 +40,7 @@ static const char* get_log_level_color(const logger::LogType log_level)
 	case logger::LogType::LOG_LEVEL_INFO:
 		return "\033[94m";
 	case logger::LogType::LOG_LEVEL_FATAL:
-		return "\033[105m";
+		return "\033[45;30m";
 	default:
 		return "\033[0m";
 	}
@@ -64,7 +61,7 @@ namespace logger
 		struct tm time_str;
 		static char time_buffer[80];
 		auto now = time(0);
-		localtime_s(&time_str, &now);
+		localtime_r(&now, &time_str);
 		strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
 
 		std::cout << get_log_level_color(log_type);
@@ -77,14 +74,15 @@ namespace logger
 			worker_id_str = stringutils::format("#W%d", thread_identifier_func());
 			worker_id = thread_identifier_func();
 
-			if (thread_identifier_func && worker_id != 255) std::cout << "\033[38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
+			if (thread_identifier_func && worker_id != 255) std::cout << "\033[40;4;38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
 		}
 		else
 		{
-			std::cout << "033[101m";
+			std::cout << "\033[0m";
 		}
 
 		std::cout << stringutils::format("%s", worker_id_str.c_str());
+        std::cout << "\033[0m";
 		std::cout << get_log_level_color(log_type);
 		
 		if (function) std::cout << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(log_type), function, line, message.c_str());

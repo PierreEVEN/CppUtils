@@ -12,17 +12,26 @@
 #define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); __debugbreak(); exit(EXIT_FAILURE); }
 #endif
 #elif CXX_GCC
-#define __SIMPLE_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), __FUNCTION__, __LINE__)
-#define __ADVANCED_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), __FUNCTION__, __LINE__, __FILE__)
-#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::console_print(log_level, stringutils::format(format_str, __VA_ARGS__), __FUNCTION__, __LINE__, __FILE__); exit(EXIT_FAILURE); }
+#define __SIMPLE_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__)
+#define __ADVANCED_LOG(format_str, log_level, ...) logger::console_print(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__)
+#define __LOG_FULL_ASSERT(format_str, log_level, ...) { logger::console_print(log_level, stringutils::format(format_str, ##__VA_ARGS__), __FUNCTION__, __LINE__, __FILE__); exit(EXIT_FAILURE); }
 #endif
 
+#if CXX_MSVC
 #define LOG_FATAL(format_str, ...) __LOG_FULL_ASSERT(format_str, logger::LogType::LOG_LEVEL_FATAL, __VA_ARGS__)
 #define LOG_VALIDATE(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_VALIDATE, __VA_ARGS__)
 #define LOG_ERROR(format_str, ...) __ADVANCED_LOG(format_str, logger::LogType::LOG_LEVEL_ERROR, __VA_ARGS__)
 #define LOG_WARNING(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_WARNING, __VA_ARGS__)
 #define LOG_INFO(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOG_DEBUG(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_DEBUG, __VA_ARGS__)
+#elif CXX_GCC
+#define LOG_FATAL(format_str, ...) __LOG_FULL_ASSERT(format_str, logger::LogType::LOG_LEVEL_FATAL, ##__VA_ARGS__)
+#define LOG_VALIDATE(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_VALIDATE, ##__VA_ARGS__)
+#define LOG_ERROR(format_str, ...) __ADVANCED_LOG(format_str, logger::LogType::LOG_LEVEL_ERROR, ##__VA_ARGS__)
+#define LOG_WARNING(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_WARNING, ##__VA_ARGS__)
+#define LOG_INFO(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_INFO, ##__VA_ARGS__)
+#define LOG_DEBUG(format_str, ...) __SIMPLE_LOG(format_str, logger::LogType::LOG_LEVEL_DEBUG, ##__VA_ARGS__)
+#endif
 
 namespace logger
 {

@@ -38,7 +38,9 @@ function(construct_target TARGET_NAME TARGET_PATH)
 endfunction()
 
 file(GLOB_RECURSE SOURCES src/* include/*)
+if (WIN32)
 source_group(TREE . FILES ${SOURCES})
+ENDIF()
 add_library(cpputils ${SOURCES})
 construct_target(cpputils . )
 
