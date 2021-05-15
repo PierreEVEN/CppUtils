@@ -55,67 +55,67 @@ enum Win_ConsoleColor {
 	CONSOLE_DISPLAY = CONSOLE_FG_COLOR_LIGHT_BLUE,
 	CONSOLE_WARNING = CONSOLE_FG_COLOR_ORANGE,
 	CONSOLE_FAIL = CONSOLE_FG_COLOR_LIGHT_RED,
-	CONSOLE_ASSERT = CONSOLE_FG_COLOR_VIOLET | CONSOLE_BG_COLOR_RED | CONSOLE_BG_COLOR_GREEN | CONSOLE_BG_COLOR_LIGHT
+	CONSOLE_ASSERT = CONSOLE_FG_COLOR_VIOLET | CONSOLE_BG_COLOR_RED | CONSOLE_BG_COLOR_GREEN | CONSOLE_BG_COLOR_LIGHT,
+	CONSOLE_TRACE = CONSOLE_FG_COLOR_WHITE
 };
 
-static WORD get_log_level_color(const logger::LogType log_level)
+static WORD get_log_level_color(const Logger::LogType log_level)
 {
 	switch (log_level)
 	{
-	case logger::LogType::LOG_LEVEL_VALIDATE:
+	case Logger::LogType::LOG_LEVEL_VALIDATE:
 		return CONSOLE_VALIDATE;
-	case logger::LogType::LOG_LEVEL_ERROR:
+	case Logger::LogType::LOG_LEVEL_ERROR:
 		return CONSOLE_FAIL;
-	case logger::LogType::LOG_LEVEL_WARNING:
+	case Logger::LogType::LOG_LEVEL_WARNING:
 		return CONSOLE_WARNING;
-	case logger::LogType::LOG_LEVEL_DEBUG:
+	case Logger::LogType::LOG_LEVEL_DEBUG:
 		return CONSOLE_DISPLAY;
-	case logger::LogType::LOG_LEVEL_INFO:
+	case Logger::LogType::LOG_LEVEL_INFO:
 		return CONSOLE_FG_COLOR_CYAN;
-	case logger::LogType::LOG_LEVEL_FATAL:
+	case Logger::LogType::LOG_LEVEL_FATAL:
 		return CONSOLE_ASSERT;
+	case Logger::LogType::LOG_LEVEL_TRACE:
+		return CONSOLE_TRACE;
 	default:
 		return CONSOLE_DEFAULT;
 	}
 }
 
-namespace logger
+void Logger::console_print(const LogItem& in_log)
 {
-	void console_print(const LogItem& in_log)
-    {
-        struct tm time_str;
-        static char time_buffer[80];
-        auto now = time(0);
-        localtime_s(&time_str, &now);
-        strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
+	struct tm time_str;
+	static char time_buffer[80];
+	auto now = time(0);
+	localtime_s(&time_str, &now);
+	strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
 
-        SetConsoleTextAttribute(h_console_out, get_log_level_color(in_log.log_level));
-        std::cout << stringutils::format("[%s  ", time_buffer);
+	SetConsoleTextAttribute(h_console_out, get_log_level_color(in_log.log_level));
+	std::cerr << stringutils::format("[%s  ", time_buffer);
 
-        auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-        auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
-        if (get_thread_identifier() && get_thread_identifier()() != 255)
-        {
-            worker_id_str = stringutils::format("#W%d", get_thread_identifier()());
-            worker_id = get_thread_identifier()();
+	auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+	auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
+	if (thread_identifier_func && thread_identifier_func() != 255)
+	{
+		worker_id_str = stringutils::format("#W%d", thread_identifier_func());
+		worker_id = thread_identifier_func();
 
-            if (get_thread_identifier() && worker_id != 255) SetConsoleTextAttribute(h_console_out, allowed_thread_colors[worker_id % allowed_thread_colors.size()]);
-        }
-        else
-        {
-            SetConsoleTextAttribute(h_console_out, CONSOLE_ASSERT);
-        }
+		if (thread_identifier_func && worker_id != 255) SetConsoleTextAttribute(h_console_out, allowed_thread_colors[worker_id % allowed_thread_colors.size()]);
+	}
+	else
+	{
+		SetConsoleTextAttribute(h_console_out, CONSOLE_ASSERT);
+	}
 
-        std::cout << stringutils::format("%s", worker_id_str.c_str());
-        SetConsoleTextAttribute(h_console_out, get_log_level_color(in_log.log_level));
-        if (in_log.function) std::cout << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(in_log.log_level), in_log.function, in_log.line, in_log.message.c_str());
-        else std::cout << stringutils::format("] [%c] : %s", get_log_level_char(in_log.log_level), in_log.message.c_str());
+	std::cerr << stringutils::format("%s", worker_id_str.c_str());
+	SetConsoleTextAttribute(h_console_out, get_log_level_color(in_log.log_level));
+	if (in_log.function_name) std::cerr << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(in_log.log_level), in_log.function_name, in_log.line, in_log.message.c_str());
+	else std::cerr << stringutils::format("] [%c] : %s", get_log_level_char(in_log.log_level), in_log.message.c_str());
 
-        if (in_log.file) std::cout << stringutils::format("\n\t=>%s", in_log.file);
+	if (in_log.file) std::cerr << stringutils::format("\n\t=>%s", in_log.file);
 
-        std::cout << std::endl;
-        SetConsoleTextAttribute(h_console_out, CONSOLE_DEFAULT);
-    }
+	std::cerr << std::endl;
+	SetConsoleTextAttribute(h_console_out, CONSOLE_DEFAULT);
 }
 
 #endif // OS_WINDOWS

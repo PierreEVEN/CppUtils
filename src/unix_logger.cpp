@@ -48,7 +48,7 @@ static const char* get_log_level_color(const logger::LogType log_level)
 
 namespace logger
 {
-	void console_print(LogType log_type, const std::string& message, const char* function, size_t line, const char* file)
+	void console_print(LogType log_type, const std::string& message, const char* function_name, size_t line, const char* file)
 	{
 		struct tm time_str;
 		static char time_buffer[80];
@@ -56,8 +56,8 @@ namespace logger
 		localtime_r(&now, &time_str);
 		strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
 
-		std::cout << get_log_level_color(log_type);
-		std::cout << stringutils::format("[%s  ", time_buffer);
+		std::cerr << get_log_level_color(log_type);
+		std::cerr << stringutils::format("[%s  ", time_buffer);
 
 		auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 		auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
@@ -66,24 +66,24 @@ namespace logger
 			worker_id_str = stringutils::format("#W%d", get_thread_identifier()());
 			worker_id = get_thread_identifier()();
 
-			if (get_thread_identifier() && worker_id != 255) std::cout << "\033[40;4;38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
+			if (get_thread_identifier() && worker_id != 255) std::cerr << "\033[40;4;38;5;" << std::to_string(allowed_thread_colors[worker_id % allowed_thread_colors.size()]).c_str() << 'm';
 		}
 		else
 		{
-			std::cout << "\033[0m";
+			std::cerr << "\033[0m";
 		}
 
-		std::cout << stringutils::format("%s", worker_id_str.c_str());
-        std::cout << "\033[0m";
-		std::cout << get_log_level_color(log_type);
+		std::cerr << stringutils::format("%s", worker_id_str.c_str());
+        std::cerr << "\033[0m";
+		std::cerr << get_log_level_color(log_type);
 		
-		if (function) std::cout << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(log_type), function, line, message.c_str());
-		else std::cout << stringutils::format("] [%c] : %s", get_log_level_char(log_type), message.c_str());
+		if (function_name) std::cerr << stringutils::format("] [%c] % s::% d : %s", get_log_level_char(log_type), function_name, line, message.c_str());
+		else std::cerr << stringutils::format("] [%c] : %s", get_log_level_char(log_type), message.c_str());
 
-		if (file) std::cout << stringutils::format("\n\t=>%s", file);
+		if (file) std::cerr << stringutils::format("\n\t=>%s", file);
 
-		std::cout << std::endl;
-		std::cout << "\033[0m";
+		std::cerr << std::endl;
+		std::cerr << "\033[0m";
 	}
 }
 

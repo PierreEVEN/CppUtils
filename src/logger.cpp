@@ -3,14 +3,9 @@
 #include "cpputils/logger.hpp"
 
 #include <filesystem>
-#include <fstream>
 #include <mutex>
 
-
-static logger::ThreadIdentifierFunctionType thread_identifier;
-extern logger::LogFunctionType log_function;
-
-char logger::get_log_level_char(const LogType log_level)
+char Logger::get_log_level_char(const LogType log_level)
 {
 	switch (log_level)
 	{
@@ -22,6 +17,8 @@ char logger::get_log_level_char(const LogType log_level)
 		return 'W';
 	case LOG_LEVEL_INFO:
 		return 'I';
+	case LOG_LEVEL_TRACE:
+		return 'T';
 	case LOG_LEVEL_DEBUG:
 		return 'D';
 	case LOG_LEVEL_FATAL:
@@ -30,88 +27,68 @@ char logger::get_log_level_char(const LogType log_level)
 	return 'X';
 }
 
-logger::LogFunctionType logger::get_log_function()
+void Logger::enable_logs(uint32_t log_level)
 {
-	return log_function;
+	enabled_logs |= log_level;
 }
 
-void logger::set_log_function(LogFunctionType in_function)
+void Logger::disable_logs(uint32_t log_level)
 {
-	log_function = in_function;
+	enabled_logs &= ~log_level;
 }
 
-void logger::log(const LogItem& in_log)
+void Logger::print(const LogItem& in_log)
 {
-	if (get_log_function()) get_log_function()(in_log);
+	if (in_log.log_level & enabled_logs) {
+
+		std::lock_guard<std::mutex> lock(logger_lock);
+
+		if (log_function_override) log_function_override(in_log);
+		else {
+			file_print(in_log);
+			console_print(in_log);
+		}
+	}
 }
 
-logger::LogFunctionType get_log_function()
+void Logger::set_log_file(const std::string& file)
 {
-	return log_function;
-}
+	const auto log_folder = std::filesystem::path(file).parent_path();
+	if (!exists(log_folder)) create_directories(log_folder);
 
-void logger::set_thread_identifier(ThreadIdentifierFunctionType func)
-{
-	thread_identifier = func;
-}
-
-logger::ThreadIdentifierFunctionType logger::get_thread_identifier()
-{
-	return thread_identifier;
-}
-
-struct LogFileManager
-{
-	LogFileManager(std::string log_file = "./saved/log/Log - %s.log")
-	{
-		const auto log_folder = std::filesystem::path(log_file).parent_path();
-		if (!exists(log_folder)) create_directories(log_folder);
-
-		time_t     now = time(0);
-		struct tm  tstruct;
-		char       buf[80];
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
 #if OS_WINDOWS
-		localtime_s(&tstruct, &now);
+	localtime_s(&tstruct, &now);
 #else
-		localtime_r(&now, &tstruct);
+	localtime_r(&now, &tstruct);
 #endif
-		strftime(buf, sizeof(buf), "%Y-%m-%d.%H.%M.%S", &tstruct);
-		
-		file = std::ofstream(stringutils::format(log_file.c_str(), buf));
-	}
+	strftime(buf, sizeof(buf), "%Y-%m-%d.%H.%M.%S", &tstruct);
 
-	void concatenate(const std::string& value)
-	{
-		file << value;
-		file.flush();
-	}
-
-	~LogFileManager()
-	{
-		if (file) file.close();
-	}
-
-	std::ofstream file;
-};
-std::unique_ptr<LogFileManager> file_manager;
-
-
-void logger::set_log_file(const std::string& file)
-{
-	file_manager = std::make_unique<LogFileManager>(file);
-}
-void logger::file_print(const LogItem& in_log)
-{
-	if (!file_manager || !file_manager->file) return;
-
-	file_manager->concatenate("test : " + in_log.message + "\n");
+	if (log_file && *log_file) log_file->close();
+	log_file = std::make_unique<std::ofstream>(stringutils::format(file.c_str(), buf));
 }
 
-std::mutex logger_lock;
-
-logger::LogFunctionType log_function = [](const logger::LogItem& in_log)
+void Logger::file_print(const LogItem& in_log)
 {
-	std::lock_guard<std::mutex> lock(logger_lock);
-	file_print(in_log);
-	console_print(in_log);
-};
+	if (!log_file && !log_file.get()) return;
+
+	struct tm time_str;
+	static char time_buffer[80];
+	auto now = time(0);
+	localtime_s(&time_str, &now);
+	strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
+
+
+	auto worker_id = static_cast<uint8_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+	auto worker_id_str = stringutils::format("~%x", std::this_thread::get_id());
+	if (thread_identifier_func && thread_identifier_func() != 255)
+	{
+		worker_id_str = stringutils::format("#W%d", thread_identifier_func());
+		worker_id = thread_identifier_func();
+	}
+
+	*log_file << stringutils::format("[%s %s] [%c] % s::% d : %s\n", time_buffer, worker_id_str.c_str(), get_log_level_char(in_log.log_level), in_log.function_name, in_log.line, in_log.message.c_str());
+	log_file->flush();
+}
