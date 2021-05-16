@@ -28,13 +28,13 @@
 #endif
 
 #if CXX_MSVC
-#define LOG_FATAL(format_str, ...) __LOG_FULL_ASSERT(format_str, Logger::LogType::LOG_LEVEL_FATAL, __VA_ARGS__)
-#define LOG_VALIDATE(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_VALIDATE, __VA_ARGS__)
-#define LOG_ERROR(format_str, ...) __ADVANCED_LOG(format_str, Logger::LogType::LOG_LEVEL_ERROR, __VA_ARGS__)
-#define LOG_WARNING(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_WARNING, __VA_ARGS__)
-#define LOG_INFO(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_TRACE(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_TRACE, __VA_ARGS__)
-#define LOG_DEBUG(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define LOG_FATAL(format_str, ...) __LOG_FULL_ASSERT(format_str, Logger::get().LogType::LOG_LEVEL_FATAL, __VA_ARGS__)
+#define LOG_VALIDATE(format_str, ...) __SIMPLE_LOG(format_str, Logger::get().LogType::LOG_LEVEL_VALIDATE, __VA_ARGS__)
+#define LOG_ERROR(format_str, ...) __ADVANCED_LOG(format_str, Logger::get().LogType::LOG_LEVEL_ERROR, __VA_ARGS__)
+#define LOG_WARNING(format_str, ...) __SIMPLE_LOG(format_str, Logger::get().LogType::LOG_LEVEL_WARNING, __VA_ARGS__)
+#define LOG_INFO(format_str, ...) __SIMPLE_LOG(format_str, Logger::get().LogType::LOG_LEVEL_INFO, __VA_ARGS__)
+#define LOG_TRACE(format_str, ...) __SIMPLE_LOG(format_str, Logger::get().LogType::LOG_LEVEL_TRACE, __VA_ARGS__)
+#define LOG_DEBUG(format_str, ...) __SIMPLE_LOG(format_str, Logger::get().LogType::LOG_LEVEL_DEBUG, __VA_ARGS__)
 #elif CXX_GCC
 #define LOG_FATAL(format_str, ...) __LOG_FULL_ASSERT(format_str, Logger::LogType::LOG_LEVEL_FATAL, ##__VA_ARGS__)
 #define LOG_VALIDATE(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_VALIDATE, ##__VA_ARGS__)
