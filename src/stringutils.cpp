@@ -1,5 +1,6 @@
 
 #include "cpputils/stringutils.hpp"
+#include <algorithm>
 
 bool stringutils::default_trim_func(char chr)
 {

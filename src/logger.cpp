@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <mutex>
+#include <thread>
 
 char Logger::get_log_level_char(const LogType log_level)
 {
@@ -77,7 +78,11 @@ void Logger::file_print(const LogItem& in_log)
 	struct tm time_str;
 	static char time_buffer[80];
 	auto now = time(0);
-	localtime_s(&time_str, &now);
+#if OS_WINDOWS
+    localtime_s(&time_str, &now);
+#else
+    localtime_r(&now, &time_str);
+#endif
 	strftime(time_buffer, sizeof(time_buffer), "%X", &time_str);
 
 
