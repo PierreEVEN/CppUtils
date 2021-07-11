@@ -12,25 +12,25 @@ DECLARE_DELEGATE_MULTICAST(MyDelegate4, float&, bool&);
 class TestFoo
 {
   public:
-    void test_foo()
+    void test_foo(float test_fl)
     {
         my_delegate.add_object(this, &TestFoo::delega);
         my_delegate.add_lambda([](float a, bool b) {
             LOG_INFO("ok lambda a %f, %d", a, b);
         });
-        my_delegate.execute(1.5f, false);
+        my_delegate.execute(test_fl, false);
 
         my_delegateb.add_object(this, &TestFoo::delegb);
         my_delegateb.add_lambda([](const float a, const bool b) {
             LOG_INFO("ok lambda a %f, %d", a, b);
         });
-        my_delegateb.execute(1.5f, false);
+        my_delegateb.execute(test_fl, false);
 
         my_delegatec.add_object(this, &TestFoo::delegc);
         my_delegatec.add_lambda([](const float& a, const bool& b) {
             LOG_INFO("ok lambda a %f, %d", a, b);
         });
-        my_delegatec.execute(1.5f, false);
+        my_delegatec.execute(test_fl, false);
 
         my_delegated.add_object(this, &TestFoo::delegd);
         my_delegated.add_lambda([](float& a, bool& b) {
@@ -77,7 +77,7 @@ int main(int argc, char* agv[])
     });
 
     TestFoo test_foo;
-    test_foo.test_foo();
+    test_foo.test_foo(5.68f);
 
     std::string res = "|" + stringutils::trim(" \t\r\n		  un beau string au bon format \r\t\n	 ") + "|";
 

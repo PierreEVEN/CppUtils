@@ -118,7 +118,7 @@ template <typename... Args_T> class DelegateMultiCast final
         }
     }
 
-    void execute(Args_T&&... inArgs)
+    void execute(Args_T... inArgs)
     {
         for (const auto& fct : functions)
         {
@@ -129,6 +129,7 @@ template <typename... Args_T> class DelegateMultiCast final
             lambda->execute(std::forward<Args_T>(inArgs)...);
         }
     }
+
 private:
     std::vector<std::unique_ptr<DelegateFunctionPtrWrapper<void, Args_T...>>> functions;
     std::vector<std::unique_ptr<ILambdaClassStorage<Args_T...>>>              lambda_expressions;
