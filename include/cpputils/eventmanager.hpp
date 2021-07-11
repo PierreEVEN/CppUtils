@@ -10,8 +10,8 @@
 template <typename Return_T, typename... Args_T> class DelegateFunctionPtrWrapper
 {
   public:
-    virtual Return_T    execute(Args_T&...)             = 0;
-    virtual bool operator==(const void*) const = 0;
+    virtual Return_T execute(Args_T&...)           = 0;
+    virtual bool     operator==(const void*) const = 0;
 };
 
 template <typename... Args_T> class ILambdaClassStorage
@@ -36,7 +36,7 @@ template <typename Lambda_T, typename... Args_T> class TLambdaClassStorage final
     Lambda_T lambda_expression;
 };
 
-template <typename ObjectClass_T, typename Return_T, typename... Args_T> class DelegateFunctionPtr  final: public DelegateFunctionPtrWrapper<Return_T, Args_T...>
+template <typename ObjectClass_T, typename Return_T, typename... Args_T> class DelegateFunctionPtr final : public DelegateFunctionPtrWrapper<Return_T, Args_T...>
 {
   public:
     DelegateFunctionPtr(ObjectClass_T* objPtr, Return_T (ObjectClass_T::*funcPtr)(Args_T...)) : object_ptr(objPtr), function_ptr(funcPtr)
@@ -68,7 +68,7 @@ template <typename Return_T, typename... Args_T> class DelegateSingleCast final
 
     template <typename ObjectClass_T> void bind(ObjectClass_T* inObjPtr, Return_T (ObjectClass_T::*inFunc)(Args_T...))
     {
-        function_ptr = std::make_unique<DelegateFunctionPtr<ObjectClass_T, Return_T, Args_T...>>(inObjPtr, inFunc);
+        function_ptr = std::make_shared<DelegateFunctionPtr<ObjectClass_T, Return_T, Args_T...>>(inObjPtr, inFunc);
     }
 
     void clear()
@@ -81,8 +81,9 @@ template <typename Return_T, typename... Args_T> class DelegateSingleCast final
         assert(function_ptr);
         return function_ptr->execute(inArgs...);
     }
-private:
-    std::unique_ptr<DelegateFunctionPtrWrapper<Return_T, Args_T...>> function_ptr = nullptr;
+
+  private:
+    std::shared_ptr<DelegateFunctionPtrWrapper<Return_T, Args_T...>> function_ptr = nullptr;
 };
 
 template <typename... Args_T> class DelegateMultiCast final
@@ -95,12 +96,12 @@ template <typename... Args_T> class DelegateMultiCast final
 
     template <typename ObjectClass_T> void add_object(ObjectClass_T* inObjPtr, void (ObjectClass_T::*inFunc)(Args_T...))
     {
-        functions.push_back(std::make_unique<DelegateFunctionPtr<ObjectClass_T, void, Args_T...>>(inObjPtr, inFunc));
+        functions.push_back(std::make_shared<DelegateFunctionPtr<ObjectClass_T, void, Args_T...>>(inObjPtr, inFunc));
     }
 
     template <typename Lambda_T> void add_lambda(const Lambda_T& lambda)
     {
-        lambda_expressions.emplace_back(std::make_unique<TLambdaClassStorage<Lambda_T, Args_T...>>(lambda));
+        lambda_expressions.emplace_back(std::make_shared<TLambdaClassStorage<Lambda_T, Args_T...>>(lambda));
     }
 
     void clear()
@@ -130,7 +131,7 @@ template <typename... Args_T> class DelegateMultiCast final
         }
     }
 
-private:
-    std::vector<std::unique_ptr<DelegateFunctionPtrWrapper<void, Args_T...>>> functions;
-    std::vector<std::unique_ptr<ILambdaClassStorage<Args_T...>>>              lambda_expressions;
+  private:
+    std::vector<std::shared_ptr<DelegateFunctionPtrWrapper<void, Args_T...>>> functions;
+    std::vector<std::shared_ptr<ILambdaClassStorage<Args_T...>>>              lambda_expressions;
 };

@@ -9,6 +9,13 @@ DECLARE_DELEGATE_MULTICAST(MyDelegate2, const float, const bool);
 DECLARE_DELEGATE_MULTICAST(MyDelegate3, const float&, const bool&);
 DECLARE_DELEGATE_MULTICAST(MyDelegate4, float&, bool&);
 
+struct InputAction
+{
+    
+};
+
+DECLARE_DELEGATE_MULTICAST(InputCall, const InputAction&, const double);
+
 class TestFoo
 {
   public:
@@ -40,6 +47,9 @@ class TestFoo
         float val  = 0.5;
         bool  val2 = false;
         my_delegated.execute(val, val2);
+
+        input_call.add_object(this, &TestFoo::inp);
+        input_call.execute(InputAction(), 2.0);
     }
 
   private:
@@ -60,10 +70,17 @@ class TestFoo
     {
         LOG_INFO("ok c %f, %d", a, b);
     }
+
+    void inp(const InputAction& a, const double b)
+    {
+        LOG_INFO("ok inp %lf", b);
+    }
+
     MyDelegate  my_delegate;
     MyDelegate2 my_delegateb;
     MyDelegate3 my_delegatec;
     MyDelegate4 my_delegated;
+    InputCall   input_call;
 };
 
 int main(int argc, char* agv[])
