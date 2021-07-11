@@ -47,7 +47,6 @@
 #define LOG_INFO(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_INFO, ##__VA_ARGS__)
 #define LOG_TRACE(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_TRACE, ##__VA_ARGS__)
 #define LOG_DEBUG(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_DEBUG, ##__VA_ARGS__)
-static_assert(false, "wtf");
 #elif CXX_CLANG
 #define LOG_FATAL(format_str, ...) __LOG_FULL_ASSERT(format_str, Logger::LogType::LOG_LEVEL_FATAL __VA_OPT__(,) __VA_ARGS__)
 #define LOG_VALIDATE(format_str, ...) __SIMPLE_LOG(format_str, Logger::LogType::LOG_LEVEL_VALIDATE __VA_OPT__(,) __VA_ARGS__)
