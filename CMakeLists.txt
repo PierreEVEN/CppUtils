@@ -4,13 +4,16 @@ cmake_minimum_required(VERSION 3.8)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-#Set startup project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests)
-
 #set project name
 project(CppUtils)
 
 option(OPT_BUILD_TEST "build tests" OFF)
+
+if (OPT_BUILD_TEST)
+	#Set startup project
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests)
+endif()
+
 
 # Set compiler options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -53,9 +56,9 @@ endif()
 construct_target(cpputils . )
 
 if (OPT_BUILD_TEST)
-file(GLOB_RECURSE SOURCES tests/*.cpp tests/*.h)
-add_executable(cpputils_tests ${SOURCES})
-construct_target(cpputils_tests tests/ ${SOURCES})
-target_link_libraries(cpputils_tests cpputils)
-target_include_directories(cpputils_tests PUBLIC src/public)
+	file(GLOB_RECURSE SOURCES tests/*.cpp tests/*.h)
+	add_executable(cpputils_tests ${SOURCES})
+	construct_target(cpputils_tests tests/ ${SOURCES})
+	target_link_libraries(cpputils_tests cpputils)
+	target_include_directories(cpputils_tests PUBLIC src/public)
 endif()
