@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+#include "simplemacros.hpp"
+
+
 namespace stringutils
 {
 	/**
@@ -16,19 +19,33 @@ namespace stringutils
 	 */
 	template<size_t N, typename... Params>
 	[[nodiscard]] std::string format(const char (&format)[N], const Params... args) {
+#if CXX_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
+#endif
 		const int size = snprintf(nullptr, 0, format, args...) + 1;
 		if (size <= 0) return format;
 		const std::unique_ptr<char[]> buffer(new char[size]);
 		snprintf(buffer.get(), size, format, args ...);	
+#if CXX_CLANG
+#pragma clang diagnostic pop
+#endif
 		return std::string(buffer.get());
 	}
 
 	template<typename... Params>
 	[[nodiscard]] std::string format_insecure(const char* format, const Params... args) {
+#if CXX_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
+#endif
 		const int size = snprintf(nullptr, 0, format, args...) + 1;
 		if (size <= 0) return format;
 		const std::unique_ptr<char[]> buffer(new char[size]);
-		snprintf(buffer.get(), size, format, args ...);	
+		snprintf(buffer.get(), size, format, args ...);
+#if CXX_CLANG
+#pragma clang diagnostic pop
+#endif
 		return std::string(buffer.get());
 	}
 
