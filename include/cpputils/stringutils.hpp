@@ -14,12 +14,21 @@ namespace stringutils
 	 * \param ...args arguments
 	 * \return string
 	 */
-	template<typename... Params>
-	[[nodiscard]] std::string format(const std::string& format, const Params... args) {
-		const int size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
+	template<size_t N, typename... Params>
+	[[nodiscard]] std::string format(const char (&format)[N], const Params... args) {
+		const int size = snprintf(nullptr, 0, format, args...) + 1;
 		if (size <= 0) return format;
 		const std::unique_ptr<char[]> buffer(new char[size]);
-		snprintf(buffer.get(), size, format.c_str(), args ...);
+		snprintf(buffer.get(), size, format, args ...);	
+		return std::string(buffer.get());
+	}
+
+	template<typename... Params>
+	[[nodiscard]] std::string format_insecure(const char* format, const Params... args) {
+		const int size = snprintf(nullptr, 0, format, args...) + 1;
+		if (size <= 0) return format;
+		const std::unique_ptr<char[]> buffer(new char[size]);
+		snprintf(buffer.get(), size, format, args ...);	
 		return std::string(buffer.get());
 	}
 

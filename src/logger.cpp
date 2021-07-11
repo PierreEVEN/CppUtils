@@ -68,7 +68,7 @@ void Logger::set_log_file(const std::string& file)
 	strftime(buf, sizeof(buf), "%Y-%m-%d.%H.%M.%S", &tstruct);
 
 	if (log_file && *log_file) log_file->close();
-	log_file = std::make_unique<std::ofstream>(stringutils::format(file.c_str(), buf));
+	log_file = std::make_unique<std::ofstream>(stringutils::format_insecure(file.c_str(), buf));
 }
 
 void Logger::file_print(const LogItem& in_log)
