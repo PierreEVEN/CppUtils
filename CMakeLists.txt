@@ -10,6 +10,8 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT t
 #set project name
 project(CppUtils)
 
+option(OPT_BUILD_TEST "build tests" OFF)
+
 # Set compiler options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	# MP build for MSVC
@@ -42,10 +44,15 @@ if (WIN32)
 source_group(TREE . FILES ${SOURCES})
 ENDIF()
 add_library(cpputils ${SOURCES})
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	target_compile_options(cpputils PRIVATE -fPIC)
+endif()
 construct_target(cpputils . )
 
+if (OPT_BUILD_TEST)
 file(GLOB_RECURSE SOURCES tests/*.cpp tests/*.h)
 add_executable(cpputils_tests ${SOURCES})
 construct_target(cpputils_tests tests/ ${SOURCES})
 target_link_libraries(cpputils_tests cpputils)
 target_include_directories(cpputils_tests PUBLIC src/public)
+endif()
