@@ -36,3 +36,4 @@ build
 saved
 .idea
 .vs
+.xmake
