@@ -1,7 +1,9 @@
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.vsxmake.autoupdate")
 
-target(cpputils)
+set_languages("c99", "cxx17")
+
+target("cpputils")
 	set_kind("static")
 	add_headerfiles("include/**.hpp")
 	add_includedirs("include", {public = true})
