@@ -10,7 +10,7 @@ set_warnings("allextra")
 set_optimize("aggressive")
 
 target("cpputils")
-	set_kind("shared")
+	set_kind("static")
 	add_headerfiles("include/(**.hpp)")
 	add_includedirs("include", {public = true})
 	add_files("src/**.cpp")
