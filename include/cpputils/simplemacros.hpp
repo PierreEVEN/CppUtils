@@ -40,6 +40,6 @@
 #define CXX_GCC 1
 #endif
 
-#if _DEBUG
+#if !NDEBUG || _DEBUG
 #define CXX_LEVEL_DEBUG 1
 #endif
